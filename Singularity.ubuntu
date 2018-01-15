@@ -1,0 +1,33 @@
+#Bootstrap: debootstrap
+#OSVersion: xenial
+#MirrorURL:  http://us.archive.ubuntu.com/ubuntu/
+Bootstrap: docker
+From: ubuntu:16.04
+
+%environment
+    CC=gcc-4.9
+    CXX=g++-4.9
+    export CC CXX
+    
+%post
+    apt-get update
+    apt-get install -y software-properties-common curl
+    add-apt-repository -y ppa:ubuntu-toolchain-r/test 
+    curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash 
+    apt-get update
+    apt-get -y install \
+      ccache \
+      gcc-4.9 g++-4.9 gcc-4.9-base \
+      git git-lfs \
+      python-pip \
+      sudo \
+      unzip
+    
+    python -m pip install --upgrade pip
+    python -m pip install cmake conan>=1.0.0
+
+    curl -L -o ninja-linux.zip https://github.com/ninja-build/ninja/releases/download/v1.8.2/ninja-linux.zip
+    unzip ninja-linux.zip
+    mv ninja /usr/local/bin/ninja
+    rm ninja-linux.zip
+
