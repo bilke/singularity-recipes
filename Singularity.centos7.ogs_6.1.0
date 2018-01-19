@@ -23,13 +23,13 @@ From: centos/devtoolset-4-toolchain-centos7
 
 
 ##############################
-# relase
+# release
 ##############################
 
 %appinstall release
-  #curl https://docs.opengeosys.org/assets/releases/6.1.0/ogs-6.1.0-Linux-4.4.0-104-generic-x64.tar.gz -O
-  #tar xf ogs-6.1.0-Linux-4.4.0-104-generic-x64.tar.gz
-  #rm ogs-6.1.0-Linux-4.4.0-104-generic-x64.tar.gz
+  curl https://docs.opengeosys.org/assets/releases/6.1.0/ogs-6.1.0-Linux-4.4.0-104-generic-x64.tar.gz -O
+  tar xf ogs-6.1.0-Linux-4.4.0-104-generic-x64.tar.gz
+  rm ogs-6.1.0-Linux-4.4.0-104-generic-x64.tar.gz
 
 %apprun release
   $SINGULARITY_APPROOT/ogs-6.1.0-Linux-4.4.0-104-generic-x64/bin/ogs
@@ -68,4 +68,4 @@ From: centos/devtoolset-4-toolchain-centos7
   ninja -j 1 install
 
 %apprun dev
-  $SINGULARITY_APPROOT/bin/ogs
+  exec $SINGULARITY_APPROOT/bin/ogs "$@"
