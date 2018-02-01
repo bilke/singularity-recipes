@@ -1,0 +1,23 @@
+Bootstrap: shub
+From: shub://sregistry.opengeosys.org/centos7/base
+
+%environment
+    CC=/opt/rh/devtoolset-4/root/bin/gcc
+    CXX=/opt/rh/devtoolset-4/root/bin/g++
+    LD_LIBRARY_PATH=/opt/rh/devtoolset-4/root/usr/lib/gcc/x86_64-redhat-linux/5.3.1:$LD_LIBRARY_PATH
+    unset HOME
+    export CC CXX LD_LIBRARY_PATH
+
+%post
+  yum -y install make perl
+  curl -L https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.1.tar.gz -O
+  tar xf openmpi-2.1.1.tar.gz
+  cd openmpi-2.1.1
+  CC=/opt/rh/devtoolset-4/root/bin/gcc CXX=/opt/rh/devtoolset-4/root/bin/g++ ./configure --prefix=/usr/local
+  make -j $(nproc)
+  make install
+  mpicc examples/ring_c.c -o ring
+  cp ./ring /usr/bin/
+  mpicc examples/hello_c.c -o hello
+  cp ./hello /usr/bin
+  mkdir -p /sw /scratch /projects
