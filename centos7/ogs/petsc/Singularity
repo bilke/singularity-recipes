@@ -6,7 +6,6 @@ From: shub://sregistry.opengeosys.org/centos7/openmpi:2.1.1
     CXX=mpic++
     export CC CXX
 
-
 ##############################
 # dev
 ##############################
@@ -18,6 +17,7 @@ From: shub://sregistry.opengeosys.org/centos7/openmpi:2.1.1
 
 %appinstall dev
   git lfs clone --branch singularity --depth=1 https://github.com/bilke/ogs || echo "Source already cloned"
+  git fetch tags
   rm -rf build && mkdir build && cd build
   CC=mpicc CXX=mpic++ cmake ../ogs -G Ninja -DCMAKE_BUILD_TYPE=Release -DOGS_USE_CONAN=ON -DCMAKE_INSTALL_PREFIX=$SINGULARITY_APPROOT -DOGS_USE_PETSC=ON
   ninja install
