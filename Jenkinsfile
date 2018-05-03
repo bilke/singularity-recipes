@@ -1,18 +1,19 @@
 pipeline {
-    agent { label 'singularity' }
-    environment {
-	SREGISTRY_CLIENT = 'registry'
-    }
-    stages {
-        stage('Build') {
-            steps {
-		sh './build.sh'
+  agent { label 'singularity' }
+  environment {
+	  SREGISTRY_CLIENT = 'registry'
+  }
+  stages {
+    stage('Build') {
+      steps {
+        sh 'singularity --version'
+	    	sh './build.sh'
 	    }
-	}
-	stage('Push') {
+	  }
+	  stage('Push') {
 	    steps {
-		sh './push.sh'
+		    sh './push.sh'
 	    }
-	}
-    }
+	  }
+  }
 }
