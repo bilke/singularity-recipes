@@ -7,14 +7,19 @@ pipeline {
     stage('Build') {
       steps {
         sh 'singularity --version'
-	    	sh './build.sh'
+	    	// sh './build.sh'
         dir('eb') { sh './build.sh' }
 	    }
 	  }
-	  stage('Push') {
-	    steps {
-		    sh './push.sh'
-	    }
-	  }
+	  //stage('Push') {
+	  //  steps {
+		//    sh './push.sh'
+	  //  }
+	  //}
+    stage('Archive') {
+      steps {
+        archive '**/*.simg'
+      }
+    }
   }
 }

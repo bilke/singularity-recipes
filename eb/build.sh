@@ -1,3 +1,6 @@
+module load EasyBuild
+module load Singularity
+
 # use current directory as location for generated container recipes & images
 export EASYBUILD_CONTAINERPATH=$PWD
 
