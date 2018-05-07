@@ -8,6 +8,7 @@ pipeline {
       steps {
         sh 'singularity --version'
 	    	sh './build.sh'
+        dir('eb') { sh './build.sh' }
 	    }
 	  }
 	  stage('Push') {
