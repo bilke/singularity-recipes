@@ -58,10 +58,10 @@ From: centos/devtoolset-4-toolchain-centos7
 
   # build ogs here
   git lfs clone --branch singularity --depth=1 https://github.com/bilke/ogs || echo "Source already cloned."
-  mkdir build || echo "Build directory exists."
-  cd build
-  CC=/opt/rh/devtoolset-4/root/bin/gcc cmake CXX=/opt/rh/devtoolset-4/root/bin/g++ ../ogs -G Ninja -DCMAKE_BUILD_TYPE=Release -DOGS_USE_CONAN=ON -DCMAKE_INSTALL_PREFIX=$SINGULARITY_APPROOT
-  ninja install
+  # mkdir build || echo "Build directory exists."
+  # cd build
+  # CC=/opt/rh/devtoolset-4/root/bin/gcc cmake CXX=/opt/rh/devtoolset-4/root/bin/g++ ../ogs -G Ninja -DCMAKE_BUILD_TYPE=Release -DOGS_USE_CONAN=ON -DCMAKE_INSTALL_PREFIX=$SINGULARITY_APPROOT
+  # ninja install
 
 %apprun dev
   exec $SINGULARITY_APPROOT/bin/ogs "$@"
