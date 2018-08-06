@@ -1,4 +1,7 @@
 pipeline {
+  options {
+    buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '1'))
+  }
   agent { label 'singularity' }
   environment {
 	  SREGISTRY_CLIENT = 'registry'
@@ -24,6 +27,11 @@ pipeline {
 	  sh 'sudo singularity build ogs-petsc-openmpu.3.1.1.simg Singularity.gcc.openmpi-3.1.1'
 	}
       }
+    }
+  }
+  post { 
+    success { 
+      archiveArtifacts artifacts: '**/*.simg'
     }
   }
 }
