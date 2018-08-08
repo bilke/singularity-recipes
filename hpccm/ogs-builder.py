@@ -71,7 +71,8 @@ if centos:
   Stage0 += shell(commands=['curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | bash'])
 else:
   Stage0 += packages(ospackages=['software-properties-common'])
-  Stage0 += shell(commands=['add-apt-repository ppa:git-core/ppa',
+  Stage0 += shell(commands=['cd ~',
+                            'add-apt-repository ppa:git-core/ppa',
                             'curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash'])
 Stage0 += packages(ospackages=['git', 'git-lfs'])
 Stage0 += shell(commands=['git lfs install'])
@@ -81,14 +82,14 @@ build_cmds = ['mkdir -p /apps/ogs/install',
               git().clone_step(
                   repository='https://github.com/bilke/ogs',
                   branch='singularity', path='/apps/ogs',
-                  directory='ogs', lfs=True),
+                  directory='ogs', lfs=centos),
               'cd /apps/ogs/build',
               ('CONAN_SYSREQUIRES_SUDO=0 CC=gcc CXX=g++ cmake /apps/ogs/ogs ' +
                '-DCMAKE_BUILD_TYPE=Release ' +
                '-DCMAKE_INSTALL_PREFIX=/apps/ogs/install ' +
                '-DOGS_USE_PETSC=ON ' +
                '-DOGS_USE_CONAN=ON '),
-              'make -j 2',
+              'make -j',
               'make install']
 Stage0 += shell(commands=build_cmds)
 
