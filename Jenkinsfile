@@ -47,18 +47,6 @@ pipeline {
             }
           }
         }
-        stage('Docker') {
-          stages {
-            stage('ubuntu-openmpi-2.1.3') {
-              steps {
-                dir('hpccm') {
-                  sh 'python3 ../hpc-container-maker/hpccm.py --recipe ogs-builder.py > Dockerfile.ubuntu-openmpi-2.1.3'
-                  sh 'docker build -t ogs.ubuntu-openmpi-2.1.3 -f Dockerfile.ubuntu-openmpi-2.1.3 .'
-                }
-              }
-            }
-          }
-        }
       }
     }
   }
