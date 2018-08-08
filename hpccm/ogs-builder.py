@@ -88,7 +88,8 @@ build_cmds = ['mkdir -p /apps/ogs/install',
                '-DCMAKE_BUILD_TYPE=Release ' +
                '-DCMAKE_INSTALL_PREFIX=/apps/ogs/install ' +
                '-DOGS_USE_PETSC=ON ' +
-               '-DOGS_USE_CONAN=ON '),
+               '-DOGS_USE_CONAN=ON ' +
+               '-DOGS_CONAN_USE_SYSTEM_OPENMPI=ON '),
               'make -j',
               'make install']
 Stage0 += shell(commands=build_cmds)
