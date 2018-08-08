@@ -30,10 +30,6 @@ if centos:
 # Common packages
 Stage0 += packages(ospackages=['curl', 'ca-certificates'])
 
-# Python
-python = python(python2=False)
-Stage0 += python
-
 # GNU compilers
 if not centos:
   gnu = gnu(fortran=False)
