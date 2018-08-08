@@ -9,6 +9,9 @@ $ hpccm.py --recipe ogs-builder.py --userarg ompi=2.1.3 centos=true
 import os
 from hpccm.templates.git import git
 
+singularity = hpccm.config.g_ctype == container_type.SINGULARITY
+docker = hpccm.config.g_ctype == container_type.DOCKER
+
 ######
 # Devel stage
 ######
@@ -29,6 +32,22 @@ if centos:
 
 # Common packages
 Stage0 += packages(ospackages=['curl', 'ca-certificates'])
+
+if singularity:
+  Stage0 += packages(ospackages=['locales'])
+  Stage0 += shell(commands=['echo "LC_ALL=en_US.UTF-8" >> /etc/environment',
+                            'echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen',
+                            'echo "LANG=en_US.UTF-8" > /etc/locale.conf',
+                            'locale-gen en_US.UTF-8'])
+
+# Python
+if centos:
+  Stage0 += packages(ospackages=['python34-setuptools'])
+  Stage0 += shell(commands=['easy_install-3.4 pip'])
+else:
+  Stage0 += packages(ospackages=['python3-setuptools', 'python3-pip'])
+Stage0 += shell(commands=['python3 -m pip install --upgrade pip',
+                          'python3 -m pip install cmake conan'])
 
 # GNU compilers
 if not centos:
@@ -56,14 +75,6 @@ else:
                             'curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash'])
 Stage0 += packages(ospackages=['git', 'git-lfs'])
 Stage0 += shell(commands=['git lfs install'])
-
-if centos:
-  Stage0 += packages(ospackages=['python34-setuptools'])
-  Stage0 += shell(commands=['easy_install-3.4 pip'])
-else:
-  Stage0 += packages(ospackages=['python3-setuptools', 'python3-pip'])
-Stage0 += shell(commands=['python3 -m pip install --upgrade pip',
-                          'python3 -m pip install cmake conan'])
 
 build_cmds = ['mkdir -p /apps/ogs/install',
               'mkdir -p /apps/ogs/build',
