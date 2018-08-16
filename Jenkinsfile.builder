@@ -34,8 +34,8 @@ pipeline {
     }
     always {
       archiveArtifacts artifacts: 'hpccm/**/Singularity.*,hpccm/**/Dockerfile.*'
-      sh 'rm -rf hpccm/*.simg'
     }
+    cleanup { sh 'rm -rf hpccm/*.simg' }
   }
 }
 
