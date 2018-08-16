@@ -83,11 +83,9 @@ Stage0 += shell(commands=['git lfs install'])
 repo = USERARG.get('repo', 'https://github.com/ufz/ogs')
 branch = USERARG.get('branch', 'master')
 
-Stage0 += shell(commands=['cd /apps',
-  git().clone_step(repository=repo, branch=branch, path='/apps/ogs',
-                   directory='ogs', lfs=centos)])
-
-build_cmds = ['mkdir -p /apps/ogs/install',
+build_cmds = [git().clone_step(repository=repo, branch=branch, path='/apps/ogs',
+                               directory='ogs', lfs=centos),
+              'mkdir -p /apps/ogs/install',
               'mkdir -p /apps/ogs/build',
               'cd /apps/ogs/build',
               ('CONAN_SYSREQUIRES_SUDO=0 CC=gcc CXX=g++ cmake /apps/ogs/ogs ' +
