@@ -2,7 +2,7 @@
 The OpenMPI version can be specified on the command line.  
 Note: no validation is performed on the user supplied information.
 Usage:
-$ hpccm.py --recipe ogs-builder.py --userarg ompi=2.1.3 centos=true
+$ hpccm.py --recipe ogs-builder.py --userarg ompi=2.1.3 centos=true repo=https://github.com/bilke/ogs branch=singularity
 """
 # pylint: disable=invalid-name, undefined-variable, used-before-assignment
 
@@ -29,6 +29,7 @@ Stage0.baseimage(image=image)
 
 if centos:
   Stage0 += user(user='root')
+  Stage0 += packages(ospackages=['epel-release'])
 
 # Common packages
 Stage0 += packages(ospackages=['curl', 'ca-certificates'])
@@ -67,7 +68,6 @@ Stage0 += ompi
 
 ### OGS ###
 if centos:
-  Stage0 += packages(ospackages=['epel-release'])
   Stage0 += shell(commands=['curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | bash'])
 else:
   Stage0 += packages(ospackages=['software-properties-common'])
@@ -77,11 +77,13 @@ else:
 Stage0 += packages(ospackages=['git', 'git-lfs'])
 Stage0 += shell(commands=['git lfs install'])
 
+repo = USERARG.get('repo', 'https://github.com/ufz/ogs')
+branch = USERARG.get('branch', 'master')
+
 build_cmds = ['mkdir -p /apps/ogs/install',
               'mkdir -p /apps/ogs/build',
               git().clone_step(
-                  repository='https://github.com/bilke/ogs',
-                  branch='singularity', path='/apps/ogs',
+                  repository=repo, branch=branch, path='/apps/ogs',
                   directory='ogs', lfs=centos),
               'cd /apps/ogs/build',
               ('CONAN_SYSREQUIRES_SUDO=0 CC=gcc CXX=g++ cmake /apps/ogs/ogs ' +

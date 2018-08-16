@@ -51,11 +51,12 @@ pipeline {
     }
   }
   post {
-    always {
-      archiveArtifacts artifacts: 'hpccm/**/Singularity.*,hpccm/**/Dockerfile.*'
-    }
     success { 
       archiveArtifacts artifacts: '**/*.simg'
+    }
+    always {
+      archiveArtifacts artifacts: 'hpccm/**/Singularity.*,hpccm/**/Dockerfile.*'
+      sh 'rm -rf hpccm/*.simg'
     }
   }
 }
