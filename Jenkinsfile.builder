@@ -12,7 +12,6 @@ pipeline {
   stages {
     stage('Build') {
       steps {
-        echo "Using CentOS ${params.centos}, OpenMPI version: ${params.openmpi_version}"
         dir('hpccm') {
           sh "python3 ../hpc-container-maker/hpccm.py --recipe ogs-builder.py \
             --userarg ompi=${params.openmpi_version} \
@@ -27,6 +26,15 @@ pipeline {
             Singularity.${params.centos}-openmpi-${params.openmpi_version}"
         }
       }
+    }
+  }
+  post {
+    success { 
+      archiveArtifacts artifacts: '**/*.simg'
+    }
+    always {
+      archiveArtifacts artifacts: 'hpccm/**/Singularity.*,hpccm/**/Dockerfile.*'
+      sh 'rm -rf hpccm/*.simg'
     }
   }
 }

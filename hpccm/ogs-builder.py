@@ -31,6 +31,9 @@ if centos:
   Stage0 += user(user='root')
   Stage0 += packages(ospackages=['epel-release'])
 
+# Common directories
+Stage0 += shell(commands=['mkdir -p /apps /scratch /lustre /work'])
+
 # Common packages
 Stage0 += packages(ospackages=['curl', 'ca-certificates'])
 
@@ -80,7 +83,7 @@ Stage0 += shell(commands=['git lfs install'])
 repo = USERARG.get('repo', 'https://github.com/ufz/ogs')
 branch = USERARG.get('branch', 'master')
 
-Stage0 += shell(commands=[
+Stage0 += shell(commands=['cd /apps',
   git().clone_step(repository=repo, branch=branch, path='/apps/ogs',
                    directory='ogs', lfs=centos)])
 
