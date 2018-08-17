@@ -4,6 +4,7 @@ pipeline {
   }
   agent { label 'singularity' }
   parameters {
+    choice(choices: ['singularity', 'docker'], description: '', name: 'format')
     booleanParam(name: 'centos', defaultValue: false, description: 'ubuntu or centos')
     string(name: 'repo', defaultValue: 'https://github.com/ufz/ogs', description: 'Git repository URL')
     string(name: 'branch', defaultValue: 'master', description: 'Git repository branch')
@@ -12,18 +13,29 @@ pipeline {
   stages {
     stage('Build') {
       steps {
-        dir('hpccm') {
-          sh "python3 ../hpc-container-maker/hpccm.py --recipe ogs-builder.py \
-            --userarg ompi=${params.openmpi_version} \
-                      centos=${params.centos} \
-                      repo=${params.repo} \
-                      branch=${params.branch} \
-            --format singularity \
-            > Singularity.${params.centos}-openmpi-${params.openmpi_version}"
-          sh "cat Singularity.${params.centos}-openmpi-${params.openmpi_version}"
-          sh "sudo singularity build \
-            ogs.${params.centos}-openmpi-${params.openmpi_version}.simg \
-            Singularity.${params.centos}-openmpi-${params.openmpi_version}"
+        script {
+          def filename = params.format.capitalize()
+          if (params.format == "docker") {
+            filename += "file"
+          }
+          def config_string = "${params.centos}-openmpi-${params.openmpi_version}"
+          filename += ".${config_string}"
+          dir('hpccm') {
+            sh "python3 ../hpc-container-maker/hpccm.py --recipe ogs-builder.py \
+              --userarg ompi=${params.openmpi_version} \
+                        centos=${params.centos} \
+                        repo=${params.repo} \
+                        branch=${params.branch} \
+              --format ${params.format} \
+              > ${filename}"
+            sh "cat ${filename}"
+            if (params.format == "docker") {
+              sh "docker build -t ogs6/${config_string} -f ${filename} ."
+            }
+            else {
+              sh "sudo singularity build ogs.${config_string}.simg ${filename}"
+            }
+          }
         }
       }
     }
@@ -35,7 +47,7 @@ pipeline {
     always {
       archiveArtifacts artifacts: 'hpccm/**/Singularity.*,hpccm/**/Dockerfile.*'
     }
-    cleanup { sh 'rm -rf hpccm/*.simg' }
+    cleanup { sh 'rm -rf hpccm/**/*.simg hpccm/**/Singularity.* hpccm/**/Dockerfile.*' }
   }
 }
 
