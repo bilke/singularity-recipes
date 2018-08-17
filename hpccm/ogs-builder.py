@@ -100,6 +100,11 @@ Stage0 += shell(commands=build_cmds)
 
 run_cmds = ["exec /apps/ogs/install/bin/ogs \"$@\""]
 Stage0 += runscript(commands=run_cmds)
+
+Stage0 += label(metadata={
+  'openmpi.version': ompi_version,
+  'repo': repo, 'branch': branch
+})
 ######
 # Runtime image
 ######
