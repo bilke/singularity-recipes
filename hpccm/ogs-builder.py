@@ -98,6 +98,8 @@ build_cmds = [git().clone_step(repository=repo, branch=branch, path='/apps/ogs',
               'make install']
 Stage0 += shell(commands=build_cmds)
 
+run_cmds = ["exec /apps/ogs/install/bin/ogs \"$@\""]
+Stage0 += runscript(commands=run_cmds)
 ######
 # Runtime image
 ######
