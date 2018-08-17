@@ -8,7 +8,7 @@ pipeline {
     booleanParam(name: 'centos', defaultValue: false, description: 'ubuntu or centos')
     string(name: 'repo', defaultValue: 'https://github.com/ufz/ogs', description: 'Git repository URL')
     string(name: 'branch', defaultValue: 'master', description: 'Git repository branch')
-    choice(choices: ['2.1.3', '2.1.4', '3.0.2', '3.1.1'], description: '', name: 'openmpi_version')
+    choice(choices: ['2.1.1', '2.1.3', '2.1.4', '3.0.2', '3.1.1'], description: '', name: 'openmpi_version')
   }
   stages {
     stage('Build') {
@@ -44,7 +44,7 @@ pipeline {
     success { 
       archiveArtifacts artifacts: '**/*.simg'
       script {
-        currentBuild.displayName = "${params.repo} / ${params.branch}"
+        currentBuild.displayName = "#${currentBuild.number}: ${params.repo} / ${params.branch}"
         currentBuild.description = """
           CentOS: ${params.centos}\n
           Repo: ${params.repo}\n
