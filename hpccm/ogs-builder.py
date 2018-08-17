@@ -32,7 +32,7 @@ if centos:
   Stage0 += packages(ospackages=['epel-release'])
 
 # Common directories
-Stage0 += shell(commands=['mkdir -p /apps /scratch /lustre /work'])
+Stage0 += shell(commands=['mkdir -p /apps /scratch /lustre /work /projects'])
 
 # Common packages
 Stage0 += packages(ospackages=['curl', 'ca-certificates'])
@@ -68,6 +68,11 @@ ompi_version = USERARG.get('ompi', '3.1.1')
 ompi = openmpi(version=ompi_version, cuda=False)
 
 Stage0 += ompi
+
+# MPI Bandwidth
+Stage0 += shell(commands=[
+  'wget -q -nc --no-check-certificate -P /var/tmp https://computing.llnl.gov/tutorials/mpi/samples/C/mpi_bandwidth.c',
+  'mpicc -o /usr/local/bin/mpi_bandwidth /var/tmp/mpi_bandwidth.c'])
 
 ### OGS ###
 if centos:
