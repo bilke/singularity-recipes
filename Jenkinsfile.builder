@@ -43,6 +43,16 @@ pipeline {
   post {
     success { 
       archiveArtifacts artifacts: '**/*.simg'
+      script {
+        currentBuild.displayName = "${params.repo} / ${params.branch}"
+        currentBuild.description = """
+          CentOS: ${params.centos}\n
+          Repo: ${params.repo}\n
+          Branch: ${params.branch}\n
+          Container Format: ${params.format}\n
+          OpenMPI: ${params.openmpi_version}
+          """.stripIndent()
+      }
     }
     always {
       archiveArtifacts artifacts: 'hpccm/**/Singularity.*,hpccm/**/Dockerfile.*'
