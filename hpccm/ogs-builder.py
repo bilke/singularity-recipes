@@ -90,6 +90,7 @@ branch = USERARG.get('branch', 'master')
 
 build_cmds = [git().clone_step(repository=repo, branch=branch, path='/apps/ogs',
                                directory='ogs', lfs=centos),
+              'cd /apps/ogs/ogs && git fetch --tags',
               'mkdir -p /apps/ogs/install',
               'mkdir -p /apps/ogs/build',
               'cd /apps/ogs/build',
