@@ -4,8 +4,9 @@ pipeline {
   }
   agent { label 'singularity' }
   parameters {
+    booleanParam(name: 'ogs', defaultValue: true, description: 'Build OGS, or just simple MPI tests')
     choice(choices: ['singularity', 'docker'], description: '', name: 'format')
-    booleanParam(name: 'centos', defaultValue: false, description: 'ubuntu or centos')
+    booleanParam(name: 'centos', defaultValue: true, description: 'ubuntu or centos')
     string(name: 'repo', defaultValue: 'https://github.com/ufz/ogs', description: 'Git repository URL')
     string(name: 'branch', defaultValue: 'master', description: 'Git repository branch')
     choice(choices: ['2.1.1', '2.1.3', '2.1.4', '3.0.2', '3.1.1'], description: '', name: 'openmpi_version')
@@ -19,6 +20,9 @@ pipeline {
             filename += "file"
           }
           def config_string = "${params.centos}-openmpi-${params.openmpi_version}"
+          if (params.ogs == false) {
+            config_string = "test-${config_string}"
+          }
           filename += ".${config_string}"
           dir('hpccm') {
             sh "python3 ../hpc-container-maker/hpccm.py --recipe ogs-builder.py \
@@ -26,6 +30,7 @@ pipeline {
                         centos=${params.centos} \
                         repo=${params.repo} \
                         branch=${params.branch} \
+                        ogs=${params.ogs} \
               --format ${params.format} \
               > ${filename}"
             sh "cat ${filename}"

@@ -2,7 +2,11 @@
 The OpenMPI version can be specified on the command line.  
 Note: no validation is performed on the user supplied information.
 Usage:
-$ hpccm.py --recipe ogs-builder.py --userarg ompi=2.1.3 centos=true repo=https://github.com/bilke/ogs branch=singularity
+$ hpccm.py --recipe ogs-builder.py --userarg ompi=2.1.3 centos=true \
+  repo=https://github.com/bilke/ogs branch=singularity \
+  cmake="-DOGS_BUILD_UTILS=ON -DOGS_BUILD_TESTS=OFF"
+
+Build a MPI test container with --userarg ogs=false
 """
 # pylint: disable=invalid-name, undefined-variable, used-before-assignment
 
@@ -44,20 +48,23 @@ if singularity:
                             'echo "LANG=en_US.UTF-8" > /etc/locale.conf',
                             'locale-gen en_US.UTF-8'])
 
+ogs = USERARG.get('ogs', True)
+
 # Python
-if centos:
-  Stage0 += packages(ospackages=['python34-setuptools'])
-  Stage0 += shell(commands=['easy_install-3.4 pip'])
+if ogs == True:
+  if centos == True:
+    Stage0 += packages(ospackages=['python34-setuptools'])
+    Stage0 += shell(commands=['easy_install-3.4 pip'])
+  else:
+    Stage0 += packages(ospackages=['python3-setuptools', 'python3-pip'])
+  Stage0 += shell(commands=['python3 -m pip install --upgrade pip',
+                            'python3 -m pip install cmake conan'])
 else:
-  Stage0 += packages(ospackages=['python3-setuptools', 'python3-pip'])
-Stage0 += shell(commands=['python3 -m pip install --upgrade pip',
-                          'python3 -m pip install cmake conan'])
 
 # GNU compilers
-if not centos:
+if centos == False:
   gnu = gnu(fortran=False)
   Stage0 += gnu
-
 
 # Mellanox OFED
 ofed = mlnx_ofed(version='3.4-1.0.0.0')
@@ -65,51 +72,62 @@ Stage0 += ofed
 
 # Set the OpenMPI version based on the specified version (default to 3.0.0)
 ompi_version = USERARG.get('ompi', '3.1.1')
-ompi = openmpi(version=ompi_version, cuda=False)
+ompi = openmpi(version=ompi_version, cuda=False, infiniband=True)
 
 Stage0 += ompi
 
 # MPI Bandwidth
 Stage0 += shell(commands=[
   'wget -q -nc --no-check-certificate -P /var/tmp https://computing.llnl.gov/tutorials/mpi/samples/C/mpi_bandwidth.c',
-  'mpicc -o /usr/local/bin/mpi_bandwidth /var/tmp/mpi_bandwidth.c'])
+  'mpicc -o /usr/local/bin/mpi_bandwidth /var/tmp/mpi_bandwidth.c',
+  'wget -q -nc --no-check-certificate -P /var/tmp https://gist.githubusercontent.com/bilke/4e9d8e1490c0d2e8cf324ba875dc37ce/raw/67948a65fffe57be361cfa6a9ceca8563878eb03/latbw.c',
+  'mpicc -o /usr/local/bin/mpi_lat_bandwidth /var/tmp/latbw.c'
+  ])
 
 ### OGS ###
-if centos:
-  Stage0 += shell(commands=['curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | bash'])
-else:
-  Stage0 += packages(ospackages=['software-properties-common'])
-  Stage0 += shell(commands=['cd ~',
-                            'add-apt-repository ppa:git-core/ppa',
-                            'curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash'])
-Stage0 += packages(ospackages=['git', 'git-lfs'])
-Stage0 += shell(commands=['git lfs install'])
+if ogs == True:
 
-repo = USERARG.get('repo', 'https://github.com/ufz/ogs')
-branch = USERARG.get('branch', 'master')
+  if centos == True:
+    Stage0 += shell(commands=['curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | bash'])
+  else:
+    Stage0 += packages(ospackages=['software-properties-common'])
+    Stage0 += shell(commands=['cd ~',
+                              'add-apt-repository ppa:git-core/ppa',
+                              'curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash'])
+  Stage0 += packages(ospackages=['git', 'git-lfs'])
+  Stage0 += shell(commands=['git lfs install'])
 
-build_cmds = [git().clone_step(repository=repo, branch=branch, path='/apps/ogs',
-                               directory='ogs', lfs=centos),
-              'cd /apps/ogs/ogs && git fetch --tags',
-              'mkdir -p /apps/ogs/install',
-              'mkdir -p /apps/ogs/build',
-              'cd /apps/ogs/build',
-              ('CONAN_SYSREQUIRES_SUDO=0 CC=gcc CXX=g++ cmake /apps/ogs/ogs ' +
-               '-DCMAKE_BUILD_TYPE=Release ' +
-               '-DCMAKE_INSTALL_PREFIX=/apps/ogs/install ' +
-               '-DOGS_USE_PETSC=ON ' +
-               '-DOGS_USE_CONAN=ON ' +
-               '-DOGS_CONAN_USE_SYSTEM_OPENMPI=ON '),
-              'make -j',
-              'make install']
-Stage0 += shell(commands=build_cmds)
+  repo = USERARG.get('repo', 'https://github.com/ufz/ogs')
+  branch = USERARG.get('branch', 'master')
+  cmake_args = USERARG.get('cmake', '')
 
-run_cmds = ["exec /apps/ogs/install/bin/ogs \"$@\""]
-Stage0 += runscript(commands=run_cmds)
+  build_cmds = [git().clone_step(repository=repo, branch=branch, path='/apps/ogs',
+                                 directory='ogs', lfs=centos),
+                'cd /apps/ogs/ogs && git fetch --tags',
+                'mkdir -p /apps/ogs/install',
+                'mkdir -p /apps/ogs/build',
+                'cd /apps/ogs/build',
+                ('CONAN_SYSREQUIRES_SUDO=0 CC=gcc CXX=g++ cmake /apps/ogs/ogs ' +
+                 '-DCMAKE_BUILD_TYPE=Release ' +
+                 '-DCMAKE_INSTALL_PREFIX=/apps/ogs/install ' +
+                 '-DOGS_USE_PETSC=ON ' +
+                 '-DOGS_USE_CONAN=ON ' +
+                 '-DOGS_CONAN_USE_SYSTEM_OPENMPI=ON ' +
+                 cmake_args
+                 ),
+                'make -j',
+                'make install']
+  Stage0 += shell(commands=build_cmds)
+
+  run_cmds = ["exec /apps/ogs/install/bin/ogs \"$@\""]
+  Stage0 += runscript(commands=run_cmds)
+
+  Stage0 += label(metadata={
+    'repo': repo, 'branch': branch
+  })
 
 Stage0 += label(metadata={
-  'openmpi.version': ompi_version,
-  'repo': repo, 'branch': branch
+  'openmpi.version': ompi_version
 })
 ######
 # Runtime image
