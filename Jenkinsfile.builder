@@ -1,6 +1,6 @@
 pipeline {
   options {
-    buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30'))
+    buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '15'))
   }
   agent { label 'singularity' }
   parameters {
@@ -10,6 +10,7 @@ pipeline {
     string(name: 'repo', defaultValue: 'https://github.com/ufz/ogs', description: 'Git repository URL')
     string(name: 'branch', defaultValue: 'master', description: 'Git repository branch')
     choice(choices: ['2.1.1', '2.1.3', '2.1.4', '3.0.2', '3.1.1'], description: '', name: 'openmpi_version')
+    booleanParam(name: 'infiniband', defaultValue: true, description: '')
   }
   stages {
     stage('Build') {
@@ -19,9 +20,18 @@ pipeline {
           if (params.format == "docker") {
             filename += "file"
           }
-          def config_string = "${params.centos}-openmpi-${params.openmpi_version}"
+          def config_string = "openmpi-${params.openmpi_version}"
+          if (params.centos == true) {
+            config_string = "centos-${config_string}"
+          }
+          else {
+            config_string = "ubuntu-${config_string}"
+          }
           if (params.ogs == false) {
             config_string = "test-${config_string}"
+          }
+          if (params.infiniband == false) {
+            config_string = "${config_string}-no_infininband"
           }
           filename += ".${config_string}"
           dir('hpccm') {
@@ -31,6 +41,7 @@ pipeline {
                         repo=${params.repo} \
                         branch=${params.branch} \
                         ogs=${params.ogs} \
+                        infiniband=${params.infiniband} \
               --format ${params.format} \
               > ${filename}"
             sh "cat ${filename}"
@@ -52,8 +63,6 @@ pipeline {
         currentBuild.displayName = "#${currentBuild.number}: ${params.repo} / ${params.branch}"
         currentBuild.description = """
           CentOS: ${params.centos}\n
-          Repo: ${params.repo}\n
-          Branch: ${params.branch}\n
           Container Format: ${params.format}\n
           OpenMPI: ${params.openmpi_version}
           """.stripIndent()
