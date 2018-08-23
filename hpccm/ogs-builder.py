@@ -114,7 +114,7 @@ if ogs:
                 'mkdir -p /apps/ogs/install',
                 'mkdir -p /apps/ogs/build',
                 'cd /apps/ogs/build',
-                ('CONAN_SYSREQUIRES_SUDO=0 CC=gcc CXX=g++ cmake /apps/ogs/ogs ' +
+                ('CONAN_SYSREQUIRES_SUDO=0 CC=mpicc CXX=mpic++ cmake /apps/ogs/ogs ' +
                  '-DCMAKE_BUILD_TYPE=Release ' +
                  '-DCMAKE_INSTALL_PREFIX=/apps/ogs/install ' +
                  '-DOGS_USE_PETSC=ON ' +
