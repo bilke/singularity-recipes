@@ -14,6 +14,7 @@ Other options:
 
 import os
 from hpccm.templates.git import git
+from hpccm.templates.scif import scif
 
 singularity = hpccm.config.g_ctype == container_type.SINGULARITY
 docker = hpccm.config.g_ctype == container_type.DOCKER
@@ -73,6 +74,9 @@ else:
 Stage0 += shell(commands=['python3 -m pip install --upgrade pip',
                           'python3 -m pip install scif'])
 
+# SCI-F entrypoint
+Stage0 += runscript(commands=["scif \"$@\""])
+
 # GNU compilers
 if not centos:
   Stage0 += gnu(fortran=False)
@@ -85,8 +89,15 @@ if infiniband:
 Stage0 += openmpi(version=ompi_version, cuda=False, infiniband=infiniband)
 
 # SCI-F: mpi-bandwidth
-Stage0 += copy(src='mpi-bandwidth.scif', dest='/var/tmp/mpi-bandwidth.scif')
-Stage0 += shell(commands=['scif install /var/tmp/mpi-bandwidth.scif'])
+scif_mpi = scif(
+  name='mpi-bandwidth',
+  install=['wget -q -nc --no-check-certificate -P /var/tmp https://computing.llnl.gov/tutorials/mpi/samples/C/mpi_bandwidth.c',
+           'mpicc -o bin/mpi-bandwidth /var/tmp/mpi_bandwidth.c'],
+  run='exec /scif/mpi-bandwidth/bin/mpi-bandwidth "$@"',
+  help='This app provides a MPI bandwidth test program',
+  test='exec mpirun -np 2 /scif/apps/mpi-bandwidth/bin/mpi-bandwidth "$@"'
+)
+Stage0 += scif_mpi.install()
 
 ### OGS ###
 if ogs:
@@ -119,15 +130,10 @@ if ogs:
                 'make install']
   Stage0 += shell(commands=build_cmds)
 
-  run_cmds = ["exec /apps/ogs/install/bin/ogs \"$@\""]
-  Stage0 += runscript(commands=run_cmds)
 
   Stage0 += label(metadata={
     'repo': repo, 'branch': branch
   })
-else:
-  run_cmds = ["scif \"$@\""]
-  Stage0 += runscript(commands=run_cmds)
 
 Stage0 += label(metadata={
   'openmpi.version': ompi_version,
