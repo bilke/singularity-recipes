@@ -90,12 +90,12 @@ Stage0 += openmpi(version=ompi_version, cuda=False, infiniband=infiniband)
 
 # SCI-F: mpi-bandwidth
 scif_mpi = scif(
-  name='mpi-bandwidth',
-  install=['wget -q -nc --no-check-certificate -P /var/tmp https://computing.llnl.gov/tutorials/mpi/samples/C/mpi_bandwidth.c',
-           'mpicc -o bin/mpi-bandwidth /var/tmp/mpi_bandwidth.c'],
-  run='exec /scif/mpi-bandwidth/bin/mpi-bandwidth "$@"',
-  help='This app provides a MPI bandwidth test program',
-  test='exec mpirun -np 2 /scif/apps/mpi-bandwidth/bin/mpi-bandwidth "$@"'
+  name = 'mpi-bandwidth',
+  install = ['wget -q -nc --no-check-certificate -P /var/tmp https://computing.llnl.gov/tutorials/mpi/samples/C/mpi_bandwidth.c',
+             'mpicc -o bin/mpi-bandwidth /var/tmp/mpi_bandwidth.c'],
+  run = 'exec /scif/apps/mpi-bandwidth/bin/mpi-bandwidth "\$@"',
+  help = 'This app provides a MPI bandwidth test program',
+  test = 'mpirun -np 2 /scif/apps/mpi-bandwidth/bin/mpi-bandwidth "\$@"'
 )
 Stage0 += scif_mpi.install()
 
@@ -112,28 +112,33 @@ if ogs:
   Stage0 += packages(ospackages=['git', 'git-lfs'])
   Stage0 += shell(commands=['git lfs install'])
 
-  build_cmds = [git().clone_step(repository=repo, branch=branch, path='/apps/ogs',
-                                 directory='ogs', lfs=centos),
-                'cd /apps/ogs/ogs && git fetch --tags',
-                'mkdir -p /apps/ogs/install',
-                'mkdir -p /apps/ogs/build',
-                'cd /apps/ogs/build',
-                ('CONAN_SYSREQUIRES_SUDO=0 CC=mpicc CXX=mpic++ cmake /apps/ogs/ogs ' +
-                 '-DCMAKE_BUILD_TYPE=Release ' +
-                 '-DCMAKE_INSTALL_PREFIX=/apps/ogs/install ' +
-                 '-DOGS_USE_PETSC=ON ' +
-                 '-DOGS_USE_CONAN=ON ' +
-                 '-DOGS_CONAN_USE_SYSTEM_OPENMPI=ON ' +
-                 cmake_args
-                 ),
-                'make -j',
-                'make install']
-  Stage0 += shell(commands=build_cmds)
-
-
-  Stage0 += label(metadata={
-    'repo': repo, 'branch': branch
-  })
+  scif_ogs = scif(
+    name = 'ogs',
+    run = 'exec /scif/apps/ogs/bin/ogs "\$@"',
+    install = [
+      git().clone_step(repository=repo, branch=branch, path='/scif/apps/ogs',
+                       directory='src', lfs=centos),
+      'cd /scif/apps/ogs/src && git fetch --tags',
+      'mkdir -p /scif/apps/ogs/build',
+      'cd /scif/apps/ogs/build',
+      ('CONAN_SYSREQUIRES_SUDO=0 CC=mpicc CXX=mpic++ cmake /scif/apps/ogs/src ' +
+       '-DCMAKE_BUILD_TYPE=Release ' +
+       '-DCMAKE_INSTALL_PREFIX=/scif/apps/ogs ' +
+       '-DOGS_USE_PETSC=ON ' +
+       '-DOGS_USE_CONAN=ON ' +
+       '-DOGS_CONAN_USE_SYSTEM_OPENMPI=ON ' +
+       cmake_args
+       ),
+      'make -j',
+      'make install'],
+    help = '',
+    labels = [
+      "REPOSITORY {0}".format(repo),
+      "BRANCH {0}".format(branch)
+    ],
+    test = '/scif/apps/ogs/bin/ogs --help'
+  )
+  Stage0 += scif_ogs.install()
 
 Stage0 += label(metadata={
   'openmpi.version': ompi_version,

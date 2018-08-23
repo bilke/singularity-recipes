@@ -49,7 +49,12 @@ pipeline {
               sh "docker build -t ogs6/${config_string} -f ${filename} ."
             }
             else {
-              sh "sudo singularity build ogs.${config_string}.simg ${filename}"
+              sh """
+                sudo singularity build ogs.${config_string}.simg ${filename}
+                sudo chown jenkins ogs.${config_string}.simg
+                singularity inspect ogs.${config_string}.simg > ogs.${config_string}.json
+                ./ogs.${config_string}.simg inspect > ogs.${config_string}.scif.json
+              """.stripIndent()
             }
           }
         }
@@ -58,7 +63,7 @@ pipeline {
   }
   post {
     success { 
-      archiveArtifacts artifacts: '**/*.simg'
+      archiveArtifacts artifacts: '**/*.simg,hpccm/**/*.json'
       script {
         currentBuild.displayName = "#${currentBuild.number}: ${params.repo} / ${params.branch}"
         currentBuild.description = """
