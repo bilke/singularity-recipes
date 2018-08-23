@@ -65,39 +65,32 @@ if singularity:
                             'locale-gen en_US.UTF-8'])
 
 # Python
-if ogs:
-  if centos:
-    Stage0 += packages(ospackages=['python34-setuptools'])
-    Stage0 += shell(commands=['easy_install-3.4 pip'])
-  else:
-    Stage0 += packages(ospackages=['python3-setuptools', 'python3-pip'])
-  Stage0 += shell(commands=['python3 -m pip install --upgrade pip',
-                            'python3 -m pip install cmake conan'])
+if centos:
+  Stage0 += packages(ospackages=['python34-setuptools'])
+  Stage0 += shell(commands=['easy_install-3.4 pip'])
+else:
+  Stage0 += packages(ospackages=['python3-setuptools', 'python3-pip'])
+Stage0 += shell(commands=['python3 -m pip install --upgrade pip',
+                          'python3 -m pip install scif'])
 
 # GNU compilers
 if not centos:
-  gnu = gnu(fortran=False)
-  Stage0 += gnu
+  Stage0 += gnu(fortran=False)
 
 # Mellanox OFED
 if infiniband:
-  ofed = mlnx_ofed(version='3.4-1.0.0.0')
-  Stage0 += ofed
+  Stage0 += mlnx_ofed(version='3.4-1.0.0.0')
 
 # OpenMPI
-ompi = openmpi(version=ompi_version, cuda=False, infiniband=infiniband)
-Stage0 += ompi
+Stage0 += openmpi(version=ompi_version, cuda=False, infiniband=infiniband)
 
-# MPI Bandwidth
-Stage0 += shell(commands=[
-  'wget -q -nc --no-check-certificate -P /var/tmp https://computing.llnl.gov/tutorials/mpi/samples/C/mpi_bandwidth.c',
-  'mpicc -o /usr/local/bin/mpi_bandwidth /var/tmp/mpi_bandwidth.c',
-  'wget -q -nc --no-check-certificate -P /var/tmp https://gist.githubusercontent.com/bilke/4e9d8e1490c0d2e8cf324ba875dc37ce/raw/67948a65fffe57be361cfa6a9ceca8563878eb03/latbw.c',
-  'mpicc -o /usr/local/bin/mpi_lat_bandwidth /var/tmp/latbw.c'
-  ])
+# SCI-F: mpi-bandwidth
+Stage0 += copy(src='mpi-bandwidth.scif', dest='/var/tmp/mpi-bandwidth.scif')
+Stage0 += shell(commands=['scif install /var/tmp/mpi-bandwidth.scif'])
 
 ### OGS ###
 if ogs:
+  Stage0 += shell(commands=['python3 -m pip install cmake conan'])
   if centos:
     Stage0 += shell(commands=['curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | bash'])
   else:
@@ -133,7 +126,7 @@ if ogs:
     'repo': repo, 'branch': branch
   })
 else:
-  run_cmds = ["exec /usr/local/bin/mpi_bandwidth \"$@\""]
+  run_cmds = ["scif \"$@\""]
   Stage0 += runscript(commands=run_cmds)
 
 Stage0 += label(metadata={
