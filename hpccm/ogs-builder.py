@@ -100,7 +100,7 @@ Stage0 += shell(commands=[
     '. /.singularity.d/env/90-environment.sh',
     'wget -q -nc --no-check-certificate -P /var/tmp https://computing.llnl.gov/tutorials/mpi/samples/C/mpi_bandwidth.c',
     'mpicc -o bin/mpi-bandwidth /var/tmp/mpi_bandwidth.c'], _app=app)
-Stage0 += runscript(commands=['exec /scif/apps/mpi-bandwidth/bin/mpi-bandwidth "$@"'], _app=app)
+Stage0 += runscript(commands=['/scif/apps/mpi-bandwidth/bin/mpi-bandwidth "$@"'], _app=app)
 Stage0 += raw(singularity='\
 %apphelp {0}\n    This app provides a MPI bandwidth test program\n\n\
 %apptest {0}\n    mpirun -np 2 /scif/apps/mpi-bandwidth/bin/mpi-bandwidth "$@"\n\n'.format(app))
@@ -137,12 +137,12 @@ if ogs:
     'make -j',
     'make install'
   ], _app='ogs')
-  Stage0 += runscript(commands=['exec /scif/apps/ogs/bin/ogs "$@"'], _app='ogs')
+  Stage0 += runscript(commands=['/scif/apps/ogs/bin/ogs "$@"'], _app='ogs')
   Stage0 += label(metadata={'REPOSITORY': repo, 'BRANCH': branch}, _app='ogs')
   Stage0 += raw(singularity='%apptest ogs\n    /scif/apps/ogs/bin/ogs --help')
 
   # Is also default runscript
-  Stage0 += runscript(commands=['exec /scif/apps/ogs/bin/ogs "$@"'])
+  Stage0 += runscript(commands=['/scif/apps/ogs/bin/ogs "$@"'])
 
 Stage0 += label(metadata={
   'openmpi.version': ompi_version,
