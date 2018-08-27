@@ -96,6 +96,8 @@ Stage0 += openmpi(version=ompi_version, cuda=False, infiniband=infiniband)
 
 app = 'mpi-bandwidth'
 Stage0 += shell(commands=[
+    '. /.singularity.d/env/10-docker.sh',
+    '. /.singularity.d/env/90-environment.sh',
     'wget -q -nc --no-check-certificate -P /var/tmp https://computing.llnl.gov/tutorials/mpi/samples/C/mpi_bandwidth.c',
     'mpicc -o bin/mpi-bandwidth /var/tmp/mpi_bandwidth.c'], _app=app)
 Stage0 += runscript(commands=['exec /scif/apps/mpi-bandwidth/bin/mpi-bandwidth "$@"'], _app=app)
@@ -119,6 +121,8 @@ if ogs:
   Stage0 += shell(commands=[
     git().clone_step(repository=repo, branch=branch, path='/scif/apps/ogs',
                        directory='src', lfs=centos),
+    '. /.singularity.d/env/10-docker.sh',
+    '. /.singularity.d/env/90-environment.sh',
     'cd /scif/apps/ogs/src && git fetch --tags',
     'mkdir -p /scif/apps/ogs/build',
     'cd /scif/apps/ogs/build',
