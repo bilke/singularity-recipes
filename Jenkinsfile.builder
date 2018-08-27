@@ -53,7 +53,7 @@ pipeline {
                 sudo singularity build ogs.${config_string}.simg ${filename}
                 sudo chown jenkins ogs.${config_string}.simg
                 singularity inspect ogs.${config_string}.simg > ogs.${config_string}.json
-                ./ogs.${config_string}.simg inspect > ogs.${config_string}.scif.json
+                singularity inspect --app ogs ./ogs.${config_string}.simg > ogs.${config_string}.scif.json
               """.stripIndent()
             }
           }
@@ -62,7 +62,7 @@ pipeline {
     }
   }
   post {
-    success { 
+    success {
       archiveArtifacts artifacts: '**/*.simg,hpccm/**/*.json'
       script {
         currentBuild.displayName = "#${currentBuild.number}: ${params.repo} / ${params.branch}"

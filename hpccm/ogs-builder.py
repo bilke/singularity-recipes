@@ -1,5 +1,5 @@
 """This example demonstrates user arguments.
-The OpenMPI version can be specified on the command line.  
+The OpenMPI version can be specified on the command line.
 Note: no validation is performed on the user supplied information.
 Usage:
 $ hpccm.py --recipe ogs-builder.py --userarg ompi=2.1.3 centos=true \
@@ -14,7 +14,6 @@ Other options:
 
 import os
 from hpccm.templates.git import git
-from hpccm.templates.scif import scif
 
 singularity = hpccm.config.g_ctype == container_type.SINGULARITY
 docker = hpccm.config.g_ctype == container_type.DOCKER
@@ -71,11 +70,7 @@ if centos:
   Stage0 += shell(commands=['easy_install-3.4 pip'])
 else:
   Stage0 += packages(ospackages=['python3-setuptools', 'python3-pip'])
-Stage0 += shell(commands=['python3 -m pip install --upgrade pip',
-                          'python3 -m pip install scif'])
-
-# SCI-F entrypoint
-Stage0 += runscript(commands=["scif \"$@\""])
+Stage0 += shell(commands=['python3 -m pip install --upgrade pip'])
 
 # GNU compilers
 if not centos:
@@ -89,15 +84,24 @@ if infiniband:
 Stage0 += openmpi(version=ompi_version, cuda=False, infiniband=infiniband)
 
 # SCI-F: mpi-bandwidth
-scif_mpi = scif(
-  name = 'mpi-bandwidth',
-  install = ['wget -q -nc --no-check-certificate -P /var/tmp https://computing.llnl.gov/tutorials/mpi/samples/C/mpi_bandwidth.c',
-             'mpicc -o bin/mpi-bandwidth /var/tmp/mpi_bandwidth.c'],
-  run = 'exec /scif/apps/mpi-bandwidth/bin/mpi-bandwidth "\$@"',
-  help = 'This app provides a MPI bandwidth test program',
-  test = 'mpirun -np 2 /scif/apps/mpi-bandwidth/bin/mpi-bandwidth "\$@"'
-)
-Stage0 += scif_mpi.install()
+# scif_mpi = scif(
+  # name = 'mpi-bandwidth',
+  # install = ['wget -q -nc --no-check-certificate -P /var/tmp https://computing.llnl.gov/tutorials/mpi/samples/C/mpi_bandwidth.c',
+            #  'mpicc -o bin/mpi-bandwidth /var/tmp/mpi_bandwidth.c'],
+  # run = 'exec /scif/apps/mpi-bandwidth/bin/mpi-bandwidth "\$@"',
+  # help = 'This app provides a MPI bandwidth test program',
+  # test = 'mpirun -np 2 /scif/apps/mpi-bandwidth/bin/mpi-bandwidth "\$@"'
+# )
+# Stage0 += scif_mpi.install()
+
+app = 'mpi-bandwidth'
+Stage0 += shell(commands=[
+    'wget -q -nc --no-check-certificate -P /var/tmp https://computing.llnl.gov/tutorials/mpi/samples/C/mpi_bandwidth.c',
+    'mpicc -o bin/mpi-bandwidth /var/tmp/mpi_bandwidth.c'], _app=app)
+Stage0 += runscript(commands=['exec /scif/apps/mpi-bandwidth/bin/mpi-bandwidth "$@"'], _app=app)
+Stage0 += raw(singularity='\
+%apphelp {0}\n    This app provides a MPI bandwidth test program\n\n\
+%apptest {0}\n    mpirun -np 2 /scif/apps/mpi-bandwidth/bin/mpi-bandwidth "$@"\n\n'.format(app))
 
 ### OGS ###
 if ogs:
@@ -112,33 +116,29 @@ if ogs:
   Stage0 += packages(ospackages=['git', 'git-lfs'])
   Stage0 += shell(commands=['git lfs install'])
 
-  scif_ogs = scif(
-    name = 'ogs',
-    run = 'exec /scif/apps/ogs/bin/ogs "\$@"',
-    install = [
-      git().clone_step(repository=repo, branch=branch, path='/scif/apps/ogs',
+  Stage0 += shell(commands=[
+    git().clone_step(repository=repo, branch=branch, path='/scif/apps/ogs',
                        directory='src', lfs=centos),
-      'cd /scif/apps/ogs/src && git fetch --tags',
-      'mkdir -p /scif/apps/ogs/build',
-      'cd /scif/apps/ogs/build',
-      ('CONAN_SYSREQUIRES_SUDO=0 CC=mpicc CXX=mpic++ cmake /scif/apps/ogs/src ' +
-       '-DCMAKE_BUILD_TYPE=Release ' +
-       '-DCMAKE_INSTALL_PREFIX=/scif/apps/ogs ' +
-       '-DOGS_USE_PETSC=ON ' +
-       '-DOGS_USE_CONAN=ON ' +
-       '-DOGS_CONAN_USE_SYSTEM_OPENMPI=ON ' +
-       cmake_args
-       ),
-      'make -j',
-      'make install'],
-    help = '',
-    labels = [
-      "REPOSITORY {0}".format(repo),
-      "BRANCH {0}".format(branch)
-    ],
-    test = '/scif/apps/ogs/bin/ogs --help'
-  )
-  Stage0 += scif_ogs.install()
+    'cd /scif/apps/ogs/src && git fetch --tags',
+    'mkdir -p /scif/apps/ogs/build',
+    'cd /scif/apps/ogs/build',
+    ('CONAN_SYSREQUIRES_SUDO=0 CC=mpicc CXX=mpic++ cmake /scif/apps/ogs/src ' +
+     '-DCMAKE_BUILD_TYPE=Release ' +
+     '-DCMAKE_INSTALL_PREFIX=/scif/apps/ogs ' +
+     '-DOGS_USE_PETSC=ON ' +
+     '-DOGS_USE_CONAN=ON ' +
+     '-DOGS_CONAN_USE_SYSTEM_OPENMPI=ON ' +
+     cmake_args
+     ),
+    'make -j',
+    'make install'
+  ], _app='ogs')
+  Stage0 += runscript(commands=['exec /scif/apps/ogs/bin/ogs "$@"'], _app='ogs')
+  Stage0 += label(metadata={'REPOSITORY': repo, 'BRANCH': branch}, _app='ogs')
+  Stage0 += raw(singularity='%apptest ogs\n    /scif/apps/ogs/bin/ogs --help')
+
+  # Is also default runscript
+  Stage0 += runscript(commands=['exec /scif/apps/ogs/bin/ogs "$@"'])
 
 Stage0 += label(metadata={
   'openmpi.version': ompi_version,
