@@ -24,10 +24,10 @@ def str2bool(v):
   return v.lower() in ("yes", "true", "t", "1")
 
 ##### Options #####
-centos =     str2bool(USERARG.get('centos',     'False'))
+centos =     str2bool(USERARG.get('centos',     'True'))
 ogs =        str2bool(USERARG.get('ogs',        'True'))
 infiniband = str2bool(USERARG.get('infiniband', 'True'))
-ompi_version =        USERARG.get('ompi',       '3.1.1')
+ompi_version =        USERARG.get('ompi',       '3.0.2')
 
 repo =                USERARG.get('repo',       'https://github.com/ufz/ogs')
 branch =              USERARG.get('branch',     'master')
@@ -96,10 +96,8 @@ Stage0 += openmpi(version=ompi_version, cuda=False, infiniband=infiniband)
 
 app = 'mpi-bandwidth'
 Stage0 += shell(commands=[
-    '. /.singularity.d/env/10-docker.sh',
-    '. /.singularity.d/env/90-environment.sh',
     'wget -q -nc --no-check-certificate -P /var/tmp https://computing.llnl.gov/tutorials/mpi/samples/C/mpi_bandwidth.c',
-    'mpicc -o bin/mpi-bandwidth /var/tmp/mpi_bandwidth.c'], _app=app)
+    'mpicc -o bin/mpi-bandwidth /var/tmp/mpi_bandwidth.c'], _app=app, _appenv=True)
 Stage0 += runscript(commands=['/scif/apps/mpi-bandwidth/bin/mpi-bandwidth "$@"'], _app=app)
 Stage0 += raw(singularity='\
 %apphelp {0}\n    This app provides a MPI bandwidth test program\n\n\
@@ -121,8 +119,6 @@ if ogs:
   Stage0 += shell(commands=[
     git().clone_step(repository=repo, branch=branch, path='/scif/apps/ogs',
                        directory='src', lfs=centos),
-    '. /.singularity.d/env/10-docker.sh',
-    '. /.singularity.d/env/90-environment.sh',
     'cd /scif/apps/ogs/src && git fetch --tags',
     'mkdir -p /scif/apps/ogs/build',
     'cd /scif/apps/ogs/build',
@@ -136,7 +132,7 @@ if ogs:
      ),
     'make -j',
     'make install'
-  ], _app='ogs')
+  ], _app='ogs', _appenv=True)
   Stage0 += runscript(commands=['/scif/apps/ogs/bin/ogs "$@"'], _app='ogs')
   Stage0 += label(metadata={'REPOSITORY': repo, 'BRANCH': branch}, _app='ogs')
   Stage0 += raw(singularity='%apptest ogs\n    /scif/apps/ogs/bin/ogs --help')
