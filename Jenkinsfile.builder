@@ -35,15 +35,20 @@ pipeline {
           }
           filename += ".${config_string}"
           dir('hpccm') {
-            sh "python3 ../hpc-container-maker/hpccm.py --recipe ogs-builder.py \
-              --userarg ompi=${params.openmpi_version} \
+            sh """
+              python3 -m venv ../venv
+              . ../venv/bin/activate
+              pip install --upgrade six
+              python ../hpc-container-maker/hpccm.py --recipe ogs-builder.py \
+                --userarg ompi=${params.openmpi_version} \
                         centos=${params.centos} \
                         repo=${params.repo} \
                         branch=${params.branch} \
                         ogs=${params.ogs} \
                         infiniband=${params.infiniband} \
               --format ${params.format} \
-              > ${filename}"
+              > ${filename}
+            """.stripIndent()
             sh "cat ${filename}"
             if (params.format == "docker") {
               sh "docker build -t ogs6/${config_string} -f ${filename} ."
