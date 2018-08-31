@@ -105,7 +105,7 @@ Stage0 += raw(singularity='\
 
 ### OGS ###
 if ogs:
-  Stage0 += shell(commands=['python3 -m pip install cmake conan'])
+  Stage0 += shell(commands=['python3 -m pip install cmake conan==1.6.1']) # Conan 1.7 requires newer Python than 3.4
   if centos:
     Stage0 += shell(commands=['curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | bash'])
   else:
