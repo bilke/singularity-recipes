@@ -28,6 +28,7 @@ centos =     str2bool(USERARG.get('centos',     'True'))
 ogs =        str2bool(USERARG.get('ogs',        'True'))
 infiniband = str2bool(USERARG.get('infiniband', 'True'))
 ompi_version =        USERARG.get('ompi',       '3.0.2')
+benchmarks = str2bool(USERARG.get('benchmarks', 'True'))
 
 repo =                USERARG.get('repo',       'https://github.com/ufz/ogs')
 branch =              USERARG.get('branch',     'master')
