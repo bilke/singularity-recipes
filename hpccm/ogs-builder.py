@@ -150,7 +150,7 @@ if benchmarks:
     'cd osu-micro-benchmarks-${OSU_VERSION}/',
     './configure ' +
     'CC=mpicc CXX=mpicxx ' +
-    '--prefix=../',
+    '--prefix=/scif/apps/osu',
     'make -j',
     'make install',
     'cd ../',
