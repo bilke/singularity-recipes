@@ -10,6 +10,7 @@ pipeline {
     string(name: 'repo', defaultValue: 'https://github.com/ufz/ogs', description: 'Git repository URL')
     string(name: 'branch', defaultValue: 'master', description: 'Git repository branch')
     choice(choices: ['2.1.1', '2.1.3', '2.1.4', '3.0.2', '3.1.1'], description: '', name: 'openmpi_version')
+    booleanParam(name: 'benchmarks', defaultValue: true, description '')
     booleanParam(name: 'infiniband', defaultValue: true, description: '')
   }
   stages {
@@ -45,6 +46,7 @@ pipeline {
                         repo=${params.repo} \
                         branch=${params.branch} \
                         ogs=${params.ogs} \
+                        benchmarks=${param.benchmarks} \
                         infiniband=${params.infiniband} \
               --format ${params.format} \
               > ${filename}
