@@ -136,6 +136,22 @@ if ogs:
   Stage0 += runscript(commands=['/scif/apps/ogs/bin/ogs "$@"'], _app='ogs')
   Stage0 += label(metadata={'REPOSITORY': repo, 'BRANCH': branch}, _app='ogs')
   Stage0 += raw(singularity='%apptest ogs\n    /scif/apps/ogs/bin/ogs --help')
+  
+  ### Benchmarks
+  if benchmarks:
+    Stage0 += shell(commands=[
+      'OSU_VERSION=5.4.2',
+      'wget http://mvapich.cse.ohio-state.edu/download/mvapich/osu-micro-benchmarks-${OSU_VERSION}.tar.gz --no-check-certificate',
+      'tar -xf osu-micro-benchmarks-${OSU_VERSION}.tar.gz',
+      'cd osu-micro-benchmarks-${OSU_VERSION}/',
+      './configure ' +
+       'CC=mpicc CXX=mpicxx ' +
+       '--prefix=../',
+       'make -j',
+       'make install',
+       'cd ../',
+       'rm -fr osu-micro-benchmarks-${OSU_VERSION}*',
+    ], _app='osu', _appenv=True)
 
   # Is also default runscript
   Stage0 += runscript(commands=['/scif/apps/ogs/bin/ogs "$@"'])
