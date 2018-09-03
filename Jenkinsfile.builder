@@ -46,7 +46,7 @@ pipeline {
                         repo=${params.repo} \
                         branch=${params.branch} \
                         ogs=${params.ogs} \
-                        benchmarks=${param.benchmarks} \
+                        benchmarks=${params.benchmarks} \
                         infiniband=${params.infiniband} \
               --format ${params.format} \
               > ${filename}
